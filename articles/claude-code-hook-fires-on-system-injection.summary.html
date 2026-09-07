@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Claude Code の hook が拾った「訂正」の半分以上は、人が書いていない入力だった</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<style>
+  /* 1280 x 670 固定。投稿側は computer の zoom で [0, 0, 1280, 670] を切り出す */
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  body { width: 1280px; height: 670px; overflow: hidden; }
+  .card {
+    box-sizing: border-box;
+    width: 1280px; height: 670px;
+    padding: 36px 48px;
+    background: #fbf7ee;                 /* 背景 1 色 */
+    color: #2b2b2b;
+    font-family: "Yomogi", "Zen Kurenaido", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .title {
+    font-size: 44px; line-height: 1.25; font-weight: 700;
+    border-bottom: 4px solid #2b2b2b; padding-bottom: 10px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .points { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: 0; flex: 1; margin-top: 22px; }
+  .points li { flex: 1; display: flex; align-items: stretch; }
+  .points li .box {
+    box-sizing: border-box; width: 100%; min-height: 220px;
+    border: 4px solid #2b2b2b; border-radius: 18px; padding: 18px 20px;
+    background: #ffffff;
+  }
+  .points li .head { font-size: 34px; font-weight: 700; color: #b5432a; line-height: 1.2; }   /* 強調色 1 */
+  .points li .sub  { font-size: 22px; line-height: 1.4; margin-top: 10px; }
+  .points li + li::before {
+    content: ""; flex: 0 0 44px; height: 8px; margin: 0 4px; align-self: center;
+    background: #2b2b2b;
+    clip-path: polygon(0 35%, 70% 35%, 70% 0, 100% 50%, 70% 100%, 70% 65%, 0 65%);
+  }
+  .conclusion {
+    margin-top: 22px; font-size: 30px; font-weight: 700; line-height: 1.3;
+    color: #1f5f8b;                       /* 強調色 2 */
+    border-left: 10px solid #1f5f8b; padding-left: 16px;
+  }
+  .note { margin-top: 10px; font-size: 16px; color: #6b6b6b; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="title">Claude Code の hook が拾った「訂正」の半分以上は、人が書いていない入力だった</div>
+  <ul class="points">
+    <li><div class="box"><div class="head">訂正ログ 7 件</div><div class="sub">うち 4 件はユーザの発話ではなかった</div></div></li>
+    <li><div class="box"><div class="head">システム注入</div><div class="sub">task-notification でも発火する</div></div></li>
+    <li><div class="box"><div class="head">実害は 2 つ</div><div class="sub">監査の判定が歪み、無人 run が空振りする</div></div></li>
+    <li><div class="box"><div class="head">先頭一致で落とす</div><div class="sub">照合よりも前に人の発話かを判定する</div></div></li>
+  </ul>
+  <div class="conclusion">hook の入力のキーが prompt でも、人が打った文字列とは限らない</div>
+  <div class="note">下書きは Claude Code が生成し、公開前に筆者が確認している</div>
+</div>
+</body>
+</html>
