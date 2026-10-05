@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>dbt の増分モデルを、実行順序つきの合成入力で全件再計算と突き合わせる</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 1280px; height: 670px; overflow: hidden; }
+  body { color: #27333b; font-family: "Yomogi", "Zen Kurenaido", "Hiragino Sans", sans-serif; }
+  .card {
+    box-sizing: border-box; width: 1280px; height: 670px; padding: 34px 48px 22px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background-color: #faf7ef;
+    background-image: radial-gradient(#d9d4c7 0.75px, transparent 0.75px);
+    background-size: 23px 23px;
+  }
+  .title { font-size: 37px; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; }
+  .conclusion {
+    align-self: flex-start; max-width: 1120px; padding: 10px 21px 12px;
+    background: #f5dc92; border: 2px solid #27333b;
+    border-radius: 9px 13px 11px 8px; transform: rotate(-0.35deg);
+    font-size: 29px; font-weight: 700; line-height: 1.3;
+    white-space: nowrap; overflow: hidden;
+  }
+  .points { list-style: none; display: flex; align-items: stretch; margin: 0; padding: 0; }
+  .points > li { flex: 1 1 0; min-width: 0; display: flex; position: relative; }
+  .points > li + li { margin-left: 62px; }
+  .box {
+    box-sizing: border-box; position: relative; width: 100%; min-height: 282px; padding: 22px 24px 19px;
+    background: #fffdfa; border: 3px solid #27333b;
+    border-radius: 17px 13px 19px 14px;
+  }
+  .points > li:nth-child(1) .box { transform: rotate(-0.6deg); background: #fff6e9; }
+  .points > li:nth-child(2) .box { transform: rotate(0.55deg); background: #eef4f4; }
+  .points > li:nth-child(3) .box { transform: rotate(-0.45deg); background: #f4f5e9; }
+  .points > li:nth-child(4) .box { transform: rotate(0.45deg); background: #fff6e9; }
+  .points > li:nth-child(5) .box { transform: rotate(-0.45deg); background: #eef4f4; }
+  .num {
+    display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center;
+    border: 3px solid #27333b; border-radius: 52% 47% 55% 45%;
+    font-size: 25px; font-weight: 700; background: #fffdfa;
+  }
+  .icon { position: absolute; top: 12px; right: 16px; width: 68px; height: 68px; transform: rotate(-7deg); filter: url(#wobble); }
+  .head { margin-top: 14px; font-size: 30px; font-weight: 700; color: #a84c35; line-height: 1.25; }
+  .head::after {
+    content: ""; display: block; margin-top: 5px; width: 75%; height: 5px;
+    border-radius: 60% 50% 40% 50%; background: #e6b675; transform: rotate(-1deg);
+  }
+  .explain { font-size: 25px; line-height: 1.45; margin: 18px 0 0; overflow-wrap: anywhere; }
+  .keys { list-style: none; padding: 0; margin: 16px 0 0; }
+  .keys li { font-size: 23px; line-height: 1.45; margin-top: 8px; }
+  .keys li::before { content: "・"; }
+  .points > li + li::before {
+    content: ""; position: absolute; left: -53px; top: 43%; width: 45px; height: 30px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 30'%3E%3Cpath d='M2 19 C13 2 27 31 39 13 M32 7 L42 13 L34 23' fill='none' stroke='%23a84c35' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .note {
+    padding-top: 10px; border-top: 2px dashed #aaa493;
+    color: #5d6568; font-size: 16px; white-space: nowrap; overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<!-- 線を手で描いたように揺らす (アイコンに適用) -->
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+</svg>
+<div class="card">
+  <div class="title">dbt の増分モデルを、実行順序つきの合成入力で全件再計算と突き合わせる</div>
+  <div class="conclusion">増分側の結果を、同じ時点の全件再計算と step ごとに比べる</div>
+  <ol class="points"><li><div class="box"><div class="num">1</div><svg class="icon" viewBox="0 0 56 56" aria-hidden="true" fill="none" stroke="#a84c35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="17" width="29" height="29" rx="3"/><path d="M17 10h25a4 4 0 0 1 4 4v25M24 5h24a4 4 0 0 1 4 4v23"/></svg><div class="head">step はスナップショット</div><p class="explain">各 step はその時点のソース表全体と時計を持つ</p></div></li>
+<li><div class="box"><div class="num">2</div><svg class="icon" viewBox="0 0 56 56" aria-hidden="true" fill="none" stroke="#a84c35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="28" cy="13" rx="18" ry="7"/><path d="M10 13v25c0 9 36 9 36 0V13M10 25c0 9 36 9 36 0"/></svg><div class="head">EXCEPT ALL で比較</div><p class="explain">重複行の個数まで含めて両側を突き合わせる</p></div></li>
+<li><div class="box"><div class="num">3</div><svg class="icon" viewBox="0 0 56 56" aria-hidden="true" fill="none" stroke="#a84c35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M28 7 51 47H5z" fill="#f5dc92"/><path d="M28 21v13"/><circle cx="28" cy="40" r="0.8"/></svg><div class="head">遅延到着と再実行</div><p class="explain">id=2 の欠落と amount=10 の二重加算を検出した</p></div></li>
+<li><div class="box"><div class="num">4</div><svg class="icon" viewBox="0 0 56 56" aria-hidden="true" fill="none" stroke="#a84c35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="6" width="36" height="45" rx="3" fill="#fffdfa"/><circle cx="19" cy="18" r="4"/><path d="M27 18h12M15 30l7 7M22 30l-7 7M27 34h12M17 44h22"/></svg><div class="head">反例を縮小して保存</div><p class="explain">3 step から 2 step に縮み、保存したシナリオで再現した</p></div></li></ol>
+  <div class="note">一致はシナリオの範囲の結果で、任意の入力に対する等価性の証明ではない</div>
+</div>
+<script>
+  document.fonts.ready.then(function () {
+    document.querySelectorAll('.title, .conclusion, .head, .note').forEach(function (el) {
+      var size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth && size > 17) {
+        size -= 1;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  });
+</script>
+</body>
+</html>
